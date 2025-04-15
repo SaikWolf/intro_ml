@@ -6,6 +6,9 @@ class Encoder_v0(nn.Module):
     def __init__(self,initial=28*28,steps=[64,3],activation=nn.ReLU()):
         assert(len(steps) > 0)
         super().__init__()
+        if isinstance(activation,str) and hasattr(nn,activation):
+            activation = getattr(nn,activation)()
+        self.hyperparams = {"initial":initial,"steps":steps,"activation":activation.__class__.__name__}
         self.linear_layers = nn.ModuleList([
             nn.Linear(initial,steps[0])
         ])
@@ -28,6 +31,9 @@ class Decoder_v0(nn.Module):
     def __init__(self,initial=3,steps=[64,28*28],activation=nn.ReLU()):
         assert(len(steps) > 0)
         super().__init__()
+        if isinstance(activation,str) and hasattr(nn,activation):
+            activation = getattr(nn,activation)()
+        self.hyperparams = {"initial":initial,"steps":steps,"activation":activation.__class__.__name__}
         self.linear_layers = nn.ModuleList([
             nn.Linear(initial,steps[0])
         ])
@@ -54,6 +60,14 @@ class AutoEncoder_v0(lp.LightningModule):
                  optim_fcn=lambda params: optim.Adam(params,lr=1e-3)
                 ):
         super().__init__()
+        if isinstance(encoder,dict):
+            encoder = Encoder_v0(**encoder)
+        else:
+            self.save_hyperparameters({"encoder":encoder.hyperparams})
+        if isinstance(decoder,dict):
+            decoder = Decoder_v0(**decoder)
+        else:
+            self.save_hyperparameters({"decoder":decoder.hyperparams})
         self.encoder = encoder
         self.decoder = decoder
         self.criterion = loss_fcn

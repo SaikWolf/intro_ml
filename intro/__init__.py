@@ -14,7 +14,10 @@ _dta_dir = os.path.join(_dev_dir,'datasets')
 
 def get_dataset_dir():
     return _dta_dir
+def get_dev_dir():
+    return _dev_dir
 
 
 del os
 from . import models
+from . import loggers
