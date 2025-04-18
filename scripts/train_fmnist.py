@@ -5,6 +5,7 @@ try:
 except ModuleNotFoundError:
     import os,sys
     sys.path.insert(0,os.path.join(os.environ['VIRTUAL_ENV'],'src','intro_dev'))
+    sys.path.insert(0,os.path.join(os.environ['VIRTUAL_ENV'],'src','intro_ml'))
     import intro
 from torchvision.datasets import FashionMNIST as MNIST
 from torchvision import transforms
