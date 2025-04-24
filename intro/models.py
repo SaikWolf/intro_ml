@@ -108,6 +108,18 @@ class AutoEncoder_v0(lp.LightningModule):
         x_hat = self.decoder(y)
         loss = self.criterion(x_hat,x)
         self.log('test_loss', loss)
+    
+    def predict_step(self, batch, batch_idx):
+        observation, label_or_target = batch
+        # del label_or_target ### not used in autoencoder
+
+        # size(0) -> batch size, so flatten observation in a vector
+        x = observation.view(observation.size(0),-1)
+        y = self.encoder(x)
+        x_hat = self.decoder(y)
+        # loss = self.criterion(x_hat,x)
+        # self.log('test_loss', loss)
+        return (batch_idx,x_hat,label_or_target)
 
     
     def configure_optimizers(self):
@@ -140,10 +152,16 @@ class Backbone_v0(nn.Module):
                       bias=True) for idx in range(1,len(steps))
         ])
         self._steps = len(steps)
-        self._looped = self._steps-1
+        self.conv_layers.extend([
+            nn.Conv2d(in_channels=self.in_size[0]*2**(self._steps),
+                      out_channels=1,
+                      kernel_size=(1,1),
+                      bias=False)
+        ])
+        self._looped = self._steps
         self.activation = activation
         self.out_size = (
-            self.in_size[0]*2**(self._steps),
+            1,
             self.in_size[1] - sum([x-1 for x in steps]),
             self.in_size[2] - sum([x-1 for x in steps]))
 
@@ -154,7 +172,7 @@ class Backbone_v0(nn.Module):
 
 
 class DecisionHead_v0(nn.Module):
-    def __init__(self,initial=(8,12,12),steps=[256,10],activation=nn.ReLU()):
+    def __init__(self,initial=(1,12,12),steps=[256,10],activation=nn.ReLU()):
         # initial shape (H,W)->C=1 or (C,H,W)
         assert(len(steps)>0)
         super().__init__()
@@ -237,6 +255,15 @@ class Classifier_v0(lp.LightningModule):
         acc = torch.eq(l_hat,label_or_target).float().mean()
         self.log_dict({'test_loss':loss,"test_acc":acc})
 
+
+    def predict_step(self, batch, batch_idx):
+        observation, label_or_target = batch
+
+        # size(0) -> batch size, so flatten observation in a vector
+        x = self.backbone(observation)
+        y = x.view(observation.size(0),-1)
+        z = self.head(y)
+        return (batch_idx,z,label_or_target)
 
     def configure_optimizers(self):
         optimizer = self.optim_maker(self.parameters())

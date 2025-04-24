@@ -11,3 +11,4 @@ seaborn
 umap-learn
 lightning
 torchvision
+pytables

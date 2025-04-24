@@ -34,8 +34,6 @@ def make_df(dataset):
     targets = dataset.targets.data
     print("Dataset dimensions:",data.shape)
     print("Target dimensions:",targets.shape)
-    
-    flat_data = np.reshape(data,(data.shape[0],-1))
     df = pd.DataFrame({"labels":targets.tolist(),'data':data.tolist(),"embed0":[0]*len(targets),"embed1":[0]*len(targets)})
     return df
 
